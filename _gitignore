@@ -1,0 +1,4 @@
+venv/
+static/images
+*.pyc
+controllers/*.pyc

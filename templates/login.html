@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block content %}
+
+<script>
+	function userLogin(){
+		while(document.getElementById("error-list").firstChild) {
+        	document.getElementById("error-list").removeChild(document.getElementById("error-list").firstChild);
+		}
+		
+		// get current values
+		var username = document.getElementById("login_username_input").value;
+		var password = document.getElementById("login_password_input").value;
+		
+		var newUserJson = JSON.stringify({
+			username: username,	
+			password: password
+		});
+		
+
+		// make post request to server
+		$.ajax({
+			type:'POST',
+			url: 'api/v1/login',
+			dataType: 'json',
+			async: false,
+			data: newUserJson,
+			contentType: 'application/json; charset=UTF-8',
+			success: function(data){
+				var cur_path = window.location.href;
+				if (cur_path.indexOf("url=") != -1){
+					var path = cur_path.split("url=")[1];
+					window.location.href = path;
+				}
+				else{
+					window.location.href="/b5340568bdcd46b4b5be/pa3";
+				}			
+			},
+			error: function(data){
+				// parse error message
+				
+				var errList = JSON.parse(data.responseText).errors;
+				
+				for (var i = 0; i < errList.length; i++){
+					//create a <p> element with error message
+					errorMsg = document.createElement('p');
+					errorMsg.innerHTML = errList[i].message;
+					errorMsg.className = "error";
+					
+					// append the newly created element to the error-list div
+					document.getElementById("error-list").appendChild(errorMsg);
+				}// end for			
+			}
+		});
+		
+	}
+
+
+</script>
+
+
+
+	
+		<div class="templatemo-content-widget templatemo-login-widget white-bg">
+			<header class="text-center">
+	          <div class="square"></div>
+	          <h1>Login</h1>
+	        </header>
+	        <form class="templatemo-login-form">
+	        	<div class="form-group">
+	        		<label>Username:</label>   
+	        		<div class="input-group">
+		        		<div class="input-group-addon"></div>	 
+		              	<input type="text" id="login_username_input" name="username" class="form-control" placeholder="eg: simplee">           
+		          	</div>	
+	        	</div>
+	        	<div class="form-group">
+	        		<label>Password:</label>
+	        		<div class="input-group">
+		        		<div class="input-group-addon"></div>	        		
+		              	<input type="password" id="login_password_input" name="password" class="form-control" placeholder="Password">           
+		          	</div>	
+	        	</div>	          	
+	        
+				
+				
+				<div id="error-list"></div>
+				
+				
+				<div class="form-group">
+					<button type="submit" id="login_submit" class="templatemo-blue-button width-100" onclick="userLogin();return false;">Login</button>
+				</div>
+	        </form>
+		</div>
+	
+	
+
+
+{% endblock %}

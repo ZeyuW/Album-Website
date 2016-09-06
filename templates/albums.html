@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block content %}
+   
+	{% if "username" in session and not public %}
+		<div class="row albums-title">
+			<h1>{{session['username']}}'s albums</h1>
+		</div>
+		
+		
+		{% for album in album_list %}
+		<div class="templatemo-content-widget white-bg">
+			<div class="media">
+			<a href="/b5340568bdcd46b4b5be/pa3/album?id={{album.albumid}}" id="album_{{album.albumid}}_link" class="web-link h2">
+			{{album.title}}
+			</a>
+                        <p></p>
+			  {% if edit %}
+			            <h3 class="media-heading text-uppercase">( {{album.access}}  )</h3> 
+				   <div class="text-right ">
+				   <form method="post" enctype=multipart/form-data>
+						<a href="/b5340568bdcd46b4b5be/pa3/album/edit?id={{album.albumid}}" id="album_edit_{{album.albumid}}_link" class="templatemo-blue-button web-link-white">Edit</a>
+						<input type="hidden" name="op" value="delete">
+						<input type="hidden" name="albumid" value="{{album.albumid}}">
+						<button type="submit" class="templatemo-white-button" id="delete_album_{{album.albumid}}">Delete</button>
+					</form>
+				  </div>
+			  {% endif %}
+			</div>
+		</div>
+		{% endfor %}
+	{% else %}
+   		<div class="row albums-title">
+			<h1>{{username}}'s public albums:</h1>
+		</div>
+   		
+   		{% for album in album_list %}
+		<div class="templatemo-content-widget white-bg">
+			<div class="media">
+			<a href="/b5340568bdcd46b4b5be/pa3/album?id={{album.albumid}}" id="album_{{album.albumid}}_link" class="web-link h2">
+			{{album.title}}
+			</a>
+			</div>
+		</div>
+		{% endfor %}
+   		
+    {% endif %}
+    
+    <!-- common interface: edit albums -->
+    {% if not edit and "username" in session and not public %}
+    <div class="row text-center ">
+    	<a href="/b5340568bdcd46b4b5be/pa3/albums/edit" class="templatemo-blue-button btn-group web-link-white" id="user_albums_edit_{{username}}">Edit albums</a>
+	</div>
+	{% endif %}
+	
+	{% if edit %}
+	<div class="templatemo-content-widget white-bg">
+		<form method="post">
+			<div class="media">
+			  <div class="media-left">
+				  <img class="media-object img-circle" src="/static/webImages/add.jpg">
+			  </div>
+
+			  <div class="media-body">
+					<h2 class="media-heading text-uppercase">Add new album</h2> 
+					<div class="col-lg-6 col-md-6 " >                  
+						<label for="albumName">*New album title: </label>
+						<input type="text" required="required" name="title" class="form-control" id="album_add_name" placeholder="eg: HelloWorld"/>           
+						<input type="hidden" name="op" value="add">
+						<input type="hidden" name="username" value="{{username}}">
+					</div>
+
+			  </div>
+			  <div class="text-right">
+				<button class="templatemo-blue-button" type="submit" id="album_add_submit">Create</button>
+			  </div>
+
+			</div>
+		</form>
+	</div>
+    
+   
+    <div class="row text-center ">
+    	<a href="/b5340568bdcd46b4b5be/pa3/albums" class="templatemo-blue-button btn-group web-link-white">Complete</a>
+	</div>
+	
+	{% endif %}
+
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<script>
+	function userLogout(){
+		// make post request to server
+		$.ajax({
+			type:'POST',
+			url: 'api/v1/logout',
+			async: false,
+			success: function(data){
+				window.location.href="/b5340568bdcd46b4b5be/pa3";
+			},
+			error: function(data){
+				window.location.href="/b5340568bdcd46b4b5be/pa3";
+			}
+		});
+		
+	}
+
+
+</script>
+	
+		<div class="templatemo-content-widget white-bg">
+		<h2 style="margin-top:16px; margin-bottom:16px;">Do you want to logout?</h2>
+			<form>
+				<button class="templatemo-blue-button" id="nav_logout" type="submit" onclick="userLogout();return false;">LOGOUT</button>
+			</form>
+		</div>
+
+
+{% endblock %}

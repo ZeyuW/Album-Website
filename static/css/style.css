@@ -1,0 +1,70 @@
+.albums-location
+{
+	font-style: italic;
+}
+
+.albums-title
+{
+	margin-bottom: 36px;
+	margin-top: 36px;
+	letter-spacing: 0.1em;
+}
+
+.web-link
+{
+	text-decoration: none;
+	color:gray;
+}
+
+.web-link-white, .web-link-white:hover
+{
+	text-decoration: none;
+	color:white;
+}
+
+
+.web-center
+{
+	margin:0 auto;
+}
+
+
+.btn-group
+{
+	margin:auto;
+	margin-top: 16px;	
+}
+
+.file-upload
+{
+	font-size: 16px;
+	margin-left: 10%;
+	
+}
+
+.file-upload-submit
+{
+	margin: 0 auto;
+	margin-top: 60%;
+	margin-bottom: -10%;
+}
+
+.error{
+	margin:0 auto;
+	font-size: 16px;
+	color:red;
+	margin-bottom: 12px;
+	margin-top: 12px;
+}
+
+.margin-16
+{
+	margin-top: 16px;
+	margin-bottom: 16px;
+}
+
+
+.hidden-button
+{
+	display:none;
+}

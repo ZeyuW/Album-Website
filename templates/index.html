@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+
+	<div class="templatemo-content-widget white-bg">
+            <h1 class="margin-bottom-10">Welcome to EECS485 Project Homepage!</h1>
+            <h4 class="margin-bottom-0">
+            	Have fun browsing!
+            </h4>             
+    </div>
+
+  
+
+	
+	{% if pub_albums %}
+		<h2 class="albums-title">Public Albums:</h2>     
+
+
+		{% for pub_album in pub_albums %}
+		<div class="templatemo-content-widget white-bg">
+			<div class="media">
+			<a href="/b5340568bdcd46b4b5be/pa3/album?id={{pub_album.albumid}}" id="album_{{pub_album.albumid}}_link" class="web-link h2">
+			{{pub_album.title}}
+			</a>
+			</div>
+		</div>
+		{% endfor %}
+	{% endif %}
+	
+	{% if "username" in session %}
+		{% if private_albums %}
+			<h2 class="albums-title">Personal Private Albums:</h2>     
+
+			{% for private_album in private_albums %}
+			<div class="templatemo-content-widget white-bg">
+				<div class="media">
+				<a href="/b5340568bdcd46b4b5be/pa3/album?id={{private_album.albumid}}" id="album_{{private_album.albumid}}_link" class="web-link h2">
+				{{private_album.title}}
+				</a>
+				</div>
+			</div>
+			{% endfor %}
+		{% endif %}
+		
+		{% if access_albums %}
+			<h2 class="albums-title">Access Granted Albums:</h2>     
+
+			{% for access_album in access_albums %}
+			<div class="templatemo-content-widget white-bg">
+				<div class="media">
+				<a href="/b5340568bdcd46b4b5be/pa3/album?id={{access_album.albumid}}" id="album_{{access_album.albumid}}_link" class="web-link h2">
+				{{access_album.title}}
+				</a>
+				</div>
+			</div>
+			{% endfor %}
+		{% endif %}
+	{% endif %}
+	
+  
+    <script>
+		document.getElementById("nav_home").className = "active";
+		history.pushState({page: 0}, "", "/b5340568bdcd46b4b5be/pa3/");
+	</script>
+   
+{% endblock %}
+
+
+
+
+
+

@@ -1,0 +1,466 @@
+{% extends "base.html" %}
+{% block content %}
+   
+{% if not edit %}
+<script>
+	var nextPicID = -1, prevPicID = -1, albumid = -1;
+	function refreshPic(queryID){
+		if(queryID == -1)
+			return;
+		history.pushState({page: 2}, "", "/b5340568bdcd46b4b5be/pa3/pic?id="+queryID);	
+		while(document.getElementById("content").firstChild) {
+        	document.getElementById("content").removeChild(document.getElementById("content").firstChild);
+		}	
+		
+		
+		$.ajax({
+			type:'GET',
+			url: 'api/v1/pic/' + queryID,
+			dataType: 'json',
+			async: false,
+			contentType: 'application/json; charset=UTF-8',
+			success: function(data){
+				// refresh nextPicID and prevPicID
+				nextPicID = data['next'];
+				prevPicID = data['prev'];
+				albumid = data['albumid'];
+				
+				// create picture element
+				var pic = document.createElement("img");
+				pic.setAttribute("src", "/static/images/" + data['picid'] + "." + data['format']);
+				pic.className = "web-center";
+				
+				var pic_wrapper = document.createElement("div");
+				pic_wrapper.className = "templatemo-flex-row flex-content-row margin-bottom-10";
+				pic_wrapper.appendChild(pic);
+				
+				document.getElementById("content").appendChild(pic_wrapper);
+				
+				// create caption element
+				var capWrapper = document.createElement("div");
+				capWrapper.className = "text-center margin-16";
+				  
+				var cap = document.createElement("p");
+				
+				cap.innerHTML = data["caption"];
+				cap.className = "web-center";
+				cap.setAttribute("id", "pic_" + data['picid'] + "_caption");
+
+				capWrapper.appendChild(cap);
+				document.getElementById("content").appendChild(capWrapper);
+				
+				// add edit caption		
+				var edit_cap = document.createElement("input");		
+				//edit_cap.className = "row";		
+				edit_cap.setAttribute("id", "pic_caption_input");		
+				edit_cap.setAttribute("name", "caption");		
+				edit_cap.setAttribute("type", "text");		
+						
+				var edit_cap_wrapper = document.createElement("div");		
+				edit_cap_wrapper.className = "col-lg-6 col-md-6 col-lg-offset-3 col-md-offset-3 form-group";		
+						
+				edit_cap_wrapper.appendChild(edit_cap);		
+						
+				// add submit edit button		
+				var edit_submit = document.createElement("button");		
+				edit_submit.className = "templatemo-blue-button";		
+				edit_submit.setAttribute("id", "pic_caption_submit");		
+				edit_submit.innerHTML = "Update Caption";		
+						
+				var edit_submit_wrapper = document.createElement("div");		
+				edit_submit_wrapper.className = "col-lg-6 col-md-6 col-lg-offset-3 col-md-offset-3 form-group";		
+						
+				edit_submit_wrapper.appendChild(edit_submit);		
+				edit_submit_wrapper.addEventListener("click", function(){		
+					var new_caption = document.getElementById("pic_caption_input").value;		
+							
+					var updateCaptionJson = JSON.stringify({		
+						albumid: data['albumid'],		
+						caption: new_caption,		
+						format: data['format'],		
+						next: data['next'],		
+						picid: data['picid'],		
+						prev: data['prev']		
+					});		
+							
+			
+					$.ajax({		
+						type:'PUT',		
+						dataType: 'json',
+						url: 'api/v1/pic/' + queryID,		
+						async: false,		
+						data: updateCaptionJson,		
+						contentType: 'application/json; charset=UTF-8',		
+						success: function(data){		
+							document.getElementById("pic_" + data['picid'] + "_caption").innerHTML = data['caption'];
+						},		
+						error: function(data){		
+							// parse error message		
+							var errList = JSON.parse(data.responseText).errors;
+				
+							if (document.getElementById("error_root")){
+								while(document.getElementById("error_root").firstChild) {
+								document.getElementById("error_root").removeChild(document.getElementById("error_root").firstChild);
+								}
+							}
+							
+							var error_root = document.createElement("div");
+							error_root.setAttribute("id", "error_root");
+							document.getElementById("content").appendChild(error_root);
+							
+							for (var i = 0; i < errList.length; i++){
+								//create a <p> element with error message
+								errorMsg = document.createElement('p');
+								errorMsg.innerHTML = errList[i].message;
+								errorMsg.className = "error";
+
+								// append the newly created element to the error-list div
+								document.getElementById("error_root").appendChild(errorMsg);
+							}		
+							
+						}
+					});		
+							
+				});		
+						
+				var edit_row = document.createElement("div");		
+				edit_row.className = "row";		
+				edit_row.appendChild(edit_cap_wrapper);		
+				edit_row.appendChild(edit_submit_wrapper);
+				
+				// append pic and caption onto content page
+				document.getElementById("content").appendChild(pic);
+				document.getElementById("content").appendChild(capWrapper);
+	 			document.getElementById("content").appendChild(edit_row);
+
+				var buttons_div = document.createElement("div");
+				buttons_div.className = "templatemo-flex-row flex-content-row";
+				var medium_div = document.createElement("div");
+				medium_div.className = "web-center";
+				var inner_div = document.createElement("div");
+				inner_div.className = "btn-group text-center";
+
+				var prev_btn = document.createElement("button");
+				prev_btn.className = "templatemo-blue-button";
+				prev_btn.id = "prev_pic";
+				prev_btn.innerHTML = "Prev";
+				prev_btn.addEventListener("click", getPrevPic);
+
+				var next_btn = document.createElement("button");
+				next_btn.className = "templatemo-blue-button";
+				next_btn.id = "next_pic";
+				next_btn.innerHTML = "Next";
+				next_btn.addEventListener("click", getNextPic);
+
+				var back_btn = document.createElement("button");
+				back_btn.className = "templatemo-blue-button web-link";
+				back_btn.id = "parent_album";
+				back_btn.innerHTML = "Back to Album";
+				back_btn.addEventListener("click", function(){goBack();return false;});
+
+				inner_div.appendChild(prev_btn);
+				inner_div.appendChild(back_btn);
+				inner_div.appendChild(next_btn);
+
+				medium_div.appendChild(inner_div);
+				buttons_div.appendChild(medium_div);
+
+				document.getElementById("content").appendChild(buttons_div);
+
+			},
+			error: function(data){
+				var errList = JSON.parse(data.responseText).errors;
+				
+				if (document.getElementById("error_root")){
+								while(document.getElementById("error_root").firstChild) {
+								document.getElementById("error_root").removeChild(document.getElementById("error_root").firstChild);
+								}
+							}
+				
+				var error_root = document.createElement("div");
+				error_root.setAttribute("id", "error_root");
+				document.getElementById("content").appendChild(error_root);
+
+				for (var i = 0; i < errList.length; i++){
+					//create a <p> element with error message
+					errorMsg = document.createElement('p');
+					errorMsg.innerHTML = errList[i].message;
+					errorMsg.className = "error";
+
+					// append the newly created element to the error-list div
+					document.getElementById("error_root").appendChild(errorMsg);
+				}
+			}
+		});
+		
+	};
+
+	function getNextPic(){
+		refreshPic(nextPicID);
+	}
+	
+	function getPrevPic(){
+		refreshPic(prevPicID);
+	}
+
+	function goBack(){
+		window.location.replace("/b5340568bdcd46b4b5be/pa3/album?id=" + albumid);
+	}
+
+	window.onpopstate = function(event) {
+		if(event.state) {
+			window.location.replace(document.location);	
+		}
+	};
+
+	window.onload = function getPicThumbnail(){
+		var albumid = location.search.split("id=")[1];
+		history.pushState({page: 1}, "", "/b5340568bdcd46b4b5be/pa3/album?id="+albumid);	
+		
+		$.ajax({
+			type:'GET',
+			url: 'api/v1/album/' + albumid,
+			dataType: 'json',
+			async: false,
+			contentType: 'application/json; charset=UTF-8',
+			success: function(data){
+				// set album title
+				document.getElementById("album_title").innerHTML = "Photos of '" + data['title'] + "'";
+				document.getElementById("album_access").innerHTML = data['access'];
+				document.getElementById("album_owner").innerHTML = "owner: " + data['username'];
+				
+				var row_length = 4, count = 0;
+				for (var i = 0; i < data['pics'].length; i++){
+					// create a picture slot to contain the pic thumbnail
+					var pic_slot = document.createElement("div");
+					pic_slot.className = "templatemo-content-widget white-bg col-lg-3 col-md-3 templatemo-position-relative templatemo-content-img-bg";
+					
+					// create picture
+					var pic = document.createElement("img");
+					pic.setAttribute("src", "/static/images/" + data['pics'][i]['picid'] + "." + data['pics'][i]['format']);
+					pic.className = "img-responsive content-bg-img";
+					
+					// create link
+					var link = document.createElement("a");
+					link.style.cursor = "pointer";
+					// add event listener
+					var in_picid = data['pics'][i]['picid'];
+					
+					link.addEventListener("click", function(event){
+				 		in_picid = document.getElementById(event.currentTarget.id).getAttribute("id").split("_")[1];
+						refreshPic(in_picid);
+					});
+					link.setAttribute("id", "pic_" + data['pics'][i]['picid'] + "_link");
+					
+					// append img into link
+					link.appendChild(pic);
+					
+					// append link into img_slot
+					pic_slot.appendChild(link);
+					
+					
+					// append pic_slot to content
+					document.getElementById("content").appendChild(pic_slot);
+				}
+				
+			},
+			error: function(data){
+				var errList = JSON.parse(data.responseText).errors;
+				
+				var error_root = document.createElement("div");
+				error_root.setAttribute("id", "error_root");
+				document.getElementById("content").appendChild(error_root);
+
+				for (var i = 0; i < errList.length; i++){
+					//create a <p> element with error message
+					errorMsg = document.createElement('p');
+					errorMsg.innerHTML = errList[i].message;
+					errorMsg.className = "error";
+
+					// append the newly created element to the error-list div
+					document.getElementById("error_root").appendChild(errorMsg);
+				}
+			}
+		});
+	};
+	
+</script>
+{% endif %}
+  
+	{% if not edit %}
+   <div class="row albums-title">
+    	<h1 id="album_title"></h1>
+        <h3 id="album_access"></h3>         
+        <h3 id="album_owner"></h3>
+    </div>
+  
+   <div class="row" id="content"></div>
+	{% endif %}
+
+  <!-- ----------------------------我是分割线---------------------------- -->
+    
+	{% if edit %}
+    <div class="row albums-title">
+    	<h1>Photos of '{{album_info.title}}'</h1>
+        <h3>({{album_info.access}},          owner: {{album_info.username}})</h3>
+        <input type="hidden" id="save_albumid" value="{{albumid}}">
+    </div>
+	{% endif %}
+  	
+   
+    {% if edit and "username" in session and album_info['username'] == session['username'] %}
+
+    <div class="templatemo-content-widget white-bg">
+    	<form class="templatemo-login-form" method="post" enctype=multipart/form-data>
+			<div class="row form-group">
+				<div class="col-lg-2 form-group">
+					<h3>Edit Access:</h3>
+				</div>
+
+		
+				<div class="col-lg-3 form-group">
+					<input type="hidden" name="albumid" value="{{albumid}}">
+					<input type="hidden" name="op" value="access">
+					<div class="radio-inline">
+					  <label>
+					  	{% if album_info['access'] == 'public' %} 
+					  		<input type="radio" class="font-weight-400" name="access" id="album_edit_public_radio" value="public" checked>
+						{% else %}
+						<input type="radio" class="font-weight-400" name="access" id="album_edit_public_radio" value="public" >
+						{% endif %}
+						Public
+					  </label>
+					</div>
+					<div class="radio-inline">
+					  <label>
+					  {% if album_info['access'] == 'private' %} 
+							<input type="radio" class="font-weight-400" name="access" id="album_edit_private_radio" value="private" checked>
+						{% else %}
+					   <input type="radio" class="font-weight-400" name="access" id="album_edit_private_radio" value="private">
+						{% endif %}
+						Private
+					  </label>
+					</div>
+				</div>
+
+				<div class="col-lg-4 form-group">
+					<button type="submit" id="album_edit_access_submit" class="templatemo-blue-button">Update Access</button>
+				</div>
+			</div>	
+		</form>
+	</div>
+
+	
+	{% if access_table['other_users'] %}
+		<h2 class="albums-title">Access table:</h2>  
+	
+		<div class="templatemo-content-widget white-bg">
+		{% for access_user in access_table['other_users'] %}
+		
+			<div class="row" style="margin-bottom:6px; margin-top:6px;">
+				<form class="templatemo-login-form" method="post" enctype=multipart/form-data>
+					<input type="hidden" name="albumid" value="{{albumid}}">
+					<input type="hidden" name="op" value="revoke">
+					<input type="hidden" name="username" value="{{access_user}}">
+					<div class="row form-group">
+						<div class="col-lg-3 col-md-3 form-group">
+							<h3>{{access_user}}</h3>
+						</div>
+						<div class="col-lg-4 col-md-4 col-lg-offset-3 col-md-offset-3 form-group">
+							<button type="submit" id="album_edit_revoke_{{access_user}}" class="templatemo-blue-button">Revoke</button>
+						</div>
+					</div>
+				</form>
+			</div>
+
+		{% endfor %}
+		</div>
+	{% endif %}
+	
+	{% if access_table['show'] %}
+	<h2 class="albums-title">Grant access:</h2>
+	<div class="templatemo-content-widget white-bg">
+		<form class="templatemo-login-form" method="post" enctype=multipart/form-data>
+			<input type="hidden" name="albumid" value="{{albumid}}">
+			<input type="hidden" name="op" value="grant">
+			<div class="row form-group">
+				<div class="col-lg-3 col-md-3 form-group">
+					<label>Input username:</label>
+					<input type="input" id="album_edit_grant_input" name="username" class="form-control" placeholder="eg: simplee"> 
+				</div>
+				<div class="col-lg-4 col-md-4 col-lg-offset-3 col-md-offset-3 form-group">
+					<button type="submit" id="album_edit_grant_submit" class="templatemo-blue-button">Grant</button>
+				</div>
+			</div>
+		</form>
+	</div>
+	{% endif %}
+	
+	{% endif %}
+
+   	{% if edit %}
+   	{% set row_width = 4 %} 
+   	{% set count = 0 %}
+   	{% if (pic_list|length) != 0 %}
+		<div class="templatemo-flex-row flex-content-row">
+	{% endif %}
+    {% for photo in pic_list %}
+    	{% set count = count + 1 %}
+			<div class="templatemo-content-widget white-bg col-lg-3 col-md-3 templatemo-position-relative templatemo-content-img-bg">
+			  <a href="/b5340568bdcd46b4b5be/pa3/pic?id={{photo.picid}}" id="pic_{{photo.picid}}_link">
+			  	<img src="/static/images/{{photo.picid}}.{{photo.format}}" class="img-responsive content-bg-img">
+			  <!--<h2 class="templatemo-position-relative white-text">{{photo.picid}}</h2>-->
+			  </a>
+			  <div class="view-img-btn-wrap">
+				
+				<form method="post" enctype=multipart/form-data>
+					<input type="hidden" name="op" value="delete">
+					<input type="hidden" name="albumid" value="{{albumid}}">
+					<input type="hidden" name="picid" value="{{photo.picid}}">
+					<button class="btn btn-danger btn-lg" id="delete_pic_{{photo.picid}}" type="submit">Delete</button>
+				</form> 
+				
+			  </div>              
+			</div>
+		{% if count == (pic_list|length) %}
+			</div>
+		{% elif count % row_width == 0 %}
+			</div>
+			<div class="templatemo-flex-row flex-content-row">
+		{% endif %}
+    {% endfor %}
+    {% endif %}
+    
+    
+    {% if edit %}
+    <div class="templatemo-flex-row flex-content-row">
+		<div class="templatemo-content-widget white-bg col-lg-3 col-md-3 templatemo-position-relative templatemo-content-img-bg">
+		  <img src="/static/webImages/add_big.png" alt="add" class="img-responsive content-bg-img">
+			  <h2 class="templatemo-position-relative white-text">picid.type</h2>
+			  
+			  <div class="view-img-btn-wrap">
+				<form method="post" enctype=multipart/form-data>
+					<input type="hidden" name="op" value="add">
+					<input type="hidden" name="albumid" value="{{albumid}}">
+					<input type="file" id="file_input" name=file  class="web-center file-upload">
+					<input type="submit" id="file_submit" class="btn btn-success btn-lg file-upload-submit" value="Upload"> 
+				</form> 
+			  </div> 
+		</div>
+	</div>
+  
+   
+   	<div class="row text-center">
+    	<a href="/b5340568bdcd46b4b5be/pa3/album?id={{albumid}}" class="templatemo-blue-button btn-group web-link-white">Complete</a>
+	</div>
+    {% endif %}
+    
+    {% if not edit %}
+    <div class="row text-center">
+    	<a href="/b5340568bdcd46b4b5be/pa3/album/edit?id={{albumid}}" class="templatemo-blue-button btn-group web-link-white">Edit photos</a>
+	</div>
+	{% endif %}
+
+    
+    
+{% endblock %}

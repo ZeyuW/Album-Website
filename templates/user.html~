@@ -1,0 +1,354 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+<script type="text/javascript">
+
+	function addNewUser(){
+		// clear existing errors
+		while(document.getElementById("error-list").firstChild) {
+        	document.getElementById("error-list").removeChild(document.getElementById("error-list").firstChild);
+		}
+		
+		// get current values
+		var new_username = document.getElementById("new_username_input").value;
+		var new_firstname = document.getElementById("new_firstname_input").value;
+		var new_lastname = document.getElementById("new_lastname_input").value;
+		var new_email = document.getElementById("new_email_input").value;
+		var new_password1 = document.getElementById("new_password1_input").value;
+		var new_password2 = document.getElementById("new_password2_input").value;
+		
+		
+		// error checking		
+		var err_list = [];		
+		var if_error = 0;		
+		if (new_username.length < 3){		
+			if_error = 1;		
+			err_list.push({"message": "Usernames must be at least 3 characters long"});		
+		}		
+				
+		var reg = new RegExp("^[0-9A-Za-z_]*$");		
+		if (!reg.test(new_username)){		
+			if_error = 1;		
+			err_list.push({"message": "Usernames may only contain letters, digits, and underscores"});		
+		}		
+				
+		if (new_password1.length < 8){		
+			if_error = 1;		
+			err_list.push({"message": "Passwords must be at least 8 characters long"});		
+		}		
+				
+				
+		var reg = new RegExp("^(?=.*[0-9])(?=.*[a-zA-Z])([a-zA-Z0-9]+)$");		
+		if (!reg.test(new_password1)){		
+			if_error = 1;		
+			err_list.push({"message": "Passwords must contain at least one letter and one number"});		
+		}		
+				
+				
+		var reg = new RegExp("^[0-9A-Za-z_]*$");		
+		if (!reg.test(new_password1)){		
+			if_error = 1;		
+			err_list.push({"message": "Passwords may only contain letters, digits, and underscores"});		
+		}		
+				
+		if (new_password1 != new_password2){		
+			if_error = 1;		
+			err_list.push({"message": "Passwords do not match"});		
+		}		
+				
+		var reg = new RegExp("[^@]+@[^@]+\.[^@]+");		
+		if (!reg.test(new_email)){		
+			if_error = 1;		
+			err_list.push({"message": "Email address must be valid"});		
+		}		
+				
+		if (new_username.length > 20){		
+			if_error = 1;		
+			err_list.push({"message": "Username must be no longer than 20 characters"});		
+		}		
+				
+		if (new_lastname.length > 20){		
+			if_error = 1;		
+			err_list.push({"message": "Lastname must be no longer than 20 characters"});		
+		}		
+				
+		if (new_firstname.length > 20){		
+			if_error = 1;		
+			err_list.push({"message": "Firstname must be no longer than 20 characters"});		
+		}		
+				
+		if (new_email.length > 40){		
+			if_error = 1;		
+			err_list.push({"message": "Email must be no longer than 20 characters"});		
+		}		
+				
+		if (if_error){		
+			for (var i = 0; i < err_list.length; i++){		
+					//create a <p> element with error message		
+					errorMsg = document.createElement('p');		
+					errorMsg.innerHTML = err_list[i].message;		
+					errorMsg.className = "error";		
+							
+					// append the newly created element to the error-list div		
+					document.getElementById("error-list").appendChild(errorMsg);		
+			}// end for		
+			return;		
+		}
+		
+		
+		var newUserJson = JSON.stringify({
+			username: new_username,
+			firstname: new_firstname,
+			lastname: new_lastname,
+			password1: new_password1,
+			password2: new_password2,
+			email: new_email
+		});
+		
+
+		// make post request to server
+		$.ajax({
+			type:'POST',
+			url: 'api/v1/user',
+			dataType: 'json',
+			async: false,
+			data: newUserJson,
+			contentType: 'application/json; charset=UTF-8',
+			success: function(data){
+				// redirect to login
+				window.location.href="login";		
+			},
+			error: function(data){
+				// parse error message
+				var errList = JSON.parse(data.responseText).errors;
+				
+				for (var i = 0; i < errList.length; i++){
+					//create a <p> element with error message
+					errorMsg = document.createElement('p');
+					errorMsg.innerHTML = errList[i].message;
+					errorMsg.className = "error";
+					
+					// append the newly created element to the error-list div
+					document.getElementById("error-list").appendChild(errorMsg);
+				}// end for			
+			}
+		});
+	};
+	
+	function updateUserInfo(){
+		while(document.getElementById("error-list").firstChild) {
+        	document.getElementById("error-list").removeChild(document.getElementById("error-list").firstChild);
+		}
+		
+		var new_username = document.getElementById("username").value;
+		var new_firstname = document.getElementById("update_firstname_input").value;
+		var new_lastname = document.getElementById("update_lastname_input").value;
+		var new_email = document.getElementById("update_email_input").value;
+		var new_password1 = document.getElementById("update_password1_input").value;
+		var new_password2 = document.getElementById("update_password2_input").value;
+		
+		var updateUserJson = JSON.stringify({
+			username: new_username,
+			firstname: new_firstname,
+			lastname: new_lastname,
+			password1: new_password1,
+			password2: new_password2,
+			email: new_email
+		});
+		updateUserJson[username] = 
+		
+		// make put request to server
+		$.ajax({
+			type:'PUT',
+			url: '../api/v1/user',
+			async: false,
+			data: updateUserJson,
+			contentType: 'application/json; charset=UTF-8',
+			success: function(data){
+				// redirect to login
+				
+				window.location.href("user/edit");	
+			},
+			error: function(data){
+				// parse error message
+				var errList = JSON.parse(data.responseText).errors;
+				
+				for (var i = 0; i < errList.length; i++){
+					//create a <p> element with error message
+					errorMsg = document.createElement('p');
+					errorMsg.innerHTML = errList[i].message;
+					errorMsg.className = "error";
+					
+					// append the newly created element to the error-list div
+					document.getElementById("error-list").appendChild(errorMsg);
+				}// end for			
+			}
+		});
+	};
+</script>
+
+
+{% if edit %}
+<script>
+	window.onload = function fillForm(){
+		$.ajax({
+			type:'GET',
+			url: '../api/v1/user',
+			dataType: 'json',
+			async: false,
+			contentType: 'application/json; charset=UTF-8',
+			success: function(data){
+				
+				document.getElementById("update_firstname_input").value = data["firstname"];
+				document.getElementById("update_lastname_input").value = data["lastname"];
+				document.getElementById("update_email_input").value = data["email"];
+			},
+			error: function(data){
+			}
+		});
+	};
+	
+</script>
+{% endif %}
+
+{% if not edit %}
+  <div class="templatemo-content-widget white-bg">
+	<h2 class="margin-bottom-10">New User</h2>
+	<form class="templatemo-login-form" id="new_user">
+
+	 <div class="row form-group">
+	 	<div id="error-list"></div>
+	 
+		<div class="col-lg-6 col-md-6 ">                  
+		  <label for="inputUsername">Username</label>
+		  <input type="text" class="form-control" id="new_username_input" name="username" placeholder="Admin">                  
+                 			
+	    </div>
+	 </div>
+
+	 <div class="row form-group">
+		 <div class="col-lg-6 col-md-6 ">                  
+			  <label for="inputFirstName">First Name</label>
+			  <input type="text" class="form-control" id="new_firstname_input" name="firstname" placeholder="John">            
+                                  
+		  </div>
+	 </div>
+
+
+	  <div class="row form-group">
+		  <div class="col-lg-6 col-md-6">                  
+			  <label for="inputLastName">Last Name</label>
+			  <input type="text" class="form-control" id="new_lastname_input" name="lastname" placeholder="Smith">                  
+		  </div> 
+	  </div>
+
+
+	  <div class="row form-group">
+		  <div class="col-lg-6 col-md-6">                  
+			  <label for="inputEmail">Email</label>
+			  <input type="input" class="form-control" id="new_email_input" name="email" placeholder="admin@company.com">                  
+		  </div> 
+	  </div>
+
+	  <div class="row form-group">
+		<div class="col-lg-6 col-md-6">                  
+			<label for="inputNewPassword">Password</label>
+			<input type="password" class="form-control" id="new_password1_input" name="password1" placeholder="password">
+                                  
+		</div>
+	  </div>
+
+	  <div class="row form-group">
+			<div class="col-lg-6 col-md-6 form-group">                  
+				<label for="inputConfirmNewPassword">Confirm Password</label>
+				<input type="password" class="form-control" id="new_password2_input" name="password2" placeholder="password">
+                                          
+			</div> 
+	  </div>
+
+	  <div class="row form-group">
+		<button class="templatemo-blue-button" id="new_submit" onclick="addNewUser();return false;">Submit</button>
+	  </div>                           
+	</form>
+</div>
+
+        
+<!-- Edit -->
+{% elif "username" in session %}
+<div class="templatemo-content-widget white-bg">
+	<h1 class="margin-bottom-10">Edit Account:</h1>
+	
+	
+	 <div class="row form-group">
+	 	<div id="error-list"></div>
+		<div class="col-lg-6 col-md-6 ">                  
+		  <h2 class="margin-16">Your Username: {{session['username']}}</h2>
+		  <input type="hidden" id="username" value="{{session['username']}}">
+	  </div>
+	 </div>
+	
+	 
+
+	<form class="templatemo-login-form form-group" id="update_user">
+	 <div class="row form-group">
+		 <div class="col-lg-6 col-md-6 ">                  
+			  <label for="inputFirstName">First Name</label>
+			  
+			  <input type="text" class="form-control" id="update_firstname_input" name="firstname">            		
+			  
+		  </div>
+	 </div>
+	
+
+
+  	
+	  <div class="row form-group">
+		  <div class="col-lg-6 col-md-6">                  
+			  <label for="inputLastName">Last Name</label>
+			  <input type="text" class="form-control" id="update_lastname_input" name="lastname">                 
+			  
+		  </div> 
+	  </div>
+	
+
+
+  	
+	  <div class="row form-group">
+		  <div class="col-lg-6 col-md-6">                  
+			  <label for="inputEmail">Email</label>
+			  <input type="input" class="form-control" id="update_email_input" name="email">  
+			       
+                                 
+		  </div> 
+	  </div>
+	
+		
+	  <div class="row form-group">
+		<div class="col-lg-6 col-md-6">                  
+			<label for="inputNewPassword">Password</label>
+			<input type="password" class="form-control" id="update_password1_input" name="password1" placeholder="******">
+                                 
+		</div>
+	  </div>
+	
+	
+	  <div class="row form-group">
+			<div class="col-lg-6 col-md-6 form-group">                  
+				<label for="inputConfirmNewPassword">Confirm Password</label>
+				<input type="password" class="form-control" id="update_password2_input" name="password2" placeholder="******">
+			</div> 
+	  </div>
+	  
+	  <div class="row form-group">
+		<button class="templatemo-blue-button" id="update_submit" onclick="updateUserInfo();return false;">Update</button>
+	  </div>
+	</form>                          
+	
+</div>
+{% endif %}
+        
+
+      
+
+{% endblock %}
